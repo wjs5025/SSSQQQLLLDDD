@@ -193,9 +193,420 @@ TRUNCATE TABLE emp;
 
 # INSERT
 
+## INSERT 문
+
 - 테이블의 모든 칼럼에 삽입하는 경우 칼럼명 생략 가능.
 - Auto Commit이 아니라면 Commit 을 해야한다.
 
 ```sql
+-- INSERT 문
 INSERT INTO table (col1, col2) VALUES (value1, value2);
 ```
+
+## SELECT문으로 입력
+
+- SELECT문으로 데이터를 조회해 테이블에 삽입 가능.
+- 단, 입력되는 테이블은 사전에 생성되어 있어야 한다.
+
+```sql
+-- SELECT 문으로 입력
+INSERT INTO I_table SELECT * FROM table;
+
+```
+
+## Nologging
+
+- DB에 데이터를 입력하면 로그파일에 그 정보를 기록
+- Check point 이벤트가 발생하면, 로그파일의 데이터를 데이터파일에 저장
+- Nologging 옵션은 로그파일의 기록을 최소화시켜서 입력시 성능 향상
+- Buffer Chace 라는 메모리 영역을 생략하고 기록
+
+```sql
+ALTER TABLE table Nologging;
+```
+
+# UPDATE
+
+- UPDATE 문은 데이터를 수정할 때 조건절이 나오는 행 수만큼 수정된다.
+
+```sql
+UPDATE emp SET ename= '조조' WHERE empno = 100;
+```
+
+# DELETE
+
+- DELETE 문으로 데이터를 삭제한다고 테이블의 용량이 초기화되지는 않는다.
+
+```sql
+DELETE FROM emp WHERE empno = 100;
+```
+
+## 테이블의 모든 데이터 삭제
+
+- DELETE FROM table : 데이터가 삭제되어도 테이블의 용량은 감소하지 않음.
+- TRUNCATE TABLE table : 데이터가 삭제되면 테이블의 용량을 초기화한다. (정의는 삭제되지 않음.)
+
+# SELECT
+
+```sql
+SELECT * FROM emp WHERE empno = 100;
+```
+
+## 와일드 카드
+
+```sql
+* : 모든
+% : 모든
+_ : 한글자
+```
+
+## 합성 연산자 : 문자열 결합을 원할 때 사용.
+
+```sql
+-- || (Oracle). + (SQL Server)
+
+-- ex1)
+SELECT ename || '님' FROM emp; -- Oracle
+
+-- ex2)
+SELECTE ename + '님' FROM emp; -- SQL Server
+```
+
+# ORDER BY를 사용한 정렬 및 특징
+
+- ORDER BY가 정렬하는 하는 시점은 SELECT 다음.
+- ORDER BY는 정렬을 하기 때문에 메모리를 많이 사용.
+- 대량의 데이터를 정렬하면 정렬로 인한 성능저하.
+- 정렬을 위해 메모리 내부에 할당된 SORT_AREA_SIZE 사용
+- 만약 , SORT_AREA_SIZE가 너무 작으면 성능저하 발생.
+- 정렬을 회피하기위해 인덱스를 생성할 때, 사용자가 원하는 형태로 오름차순/내림차순 정렬로 설정해야한다.
+
+## 특징
+
+- 특별한 지정이 없다면 ORDER BY는 오름차순
+- SELECT 절에서 정의하지 않는 칼럼 사용 가능하다.
+- SQL 문장의 제일 마지막에 위치함.
+- ORDER BY 절에 칼럼명 대신 **Alias 명**이나 **칼럼 순서를 나타내는 정수**도 사용가능.
+
+```sql
+SELECT * FROM emp ORDER BY ename, sal DESC;
+```
+
+# INDEX를 사용한 정렬 회피
+
+- ORDER BY 없이 SELECT를 하면 기본키로 오름차순 정렬된다. (기본키는 테이블 생성 시 자동으로 인덱스 생성)
+
+# Distinct 와 Alias
+
+- Distinct : 중복된 데이터 한번만 조회
+- Alias : 테이블명(또는 칼럼명)을 간략하게 사용할 때 활용.
+
+# WHERE
+
+- LIKE : 와일드 카드를 사용하지 않으면 '='와 같다.
+
+```sql
+SELECT * FROM emp WHERE ename LIKE 'test1';
+```
+
+- Between : 지정된 범위에 있는 값을 조회한다.
+
+```sql
+Between 100 and 200 -- 100과 200을 포함하고 그 사이에 있는 값을 조회
+```
+
+- IN : OR의 의미를 가지고 있어서, 하나의 조건만 만족해도 조회됨 / 2개의 칼럼을 동시에 조회할 수 있다.
+
+```sql
+-- IN
+job IN('clerk','manager);
+```
+
+```sql
+-- 두개 칼럼 동시에 조회
+(job, ename) IN (('clerk','text1'), ('manager','test4'))
+```
+
+# NULL
+
+## 의미
+
+- 모르는 값 / 값의 부재
+- NULL과 모든 비교는 알 수 없음을 반환
+- 숫자 혹은 날짜를 더하면 NULL이 된다.
+- NULL 값은 비교연산자로 비교할 수 없다.
+- 만약, 비교연산자로 NULL을 비교하면 false 가 나온다.
+
+## NULL 조회 : IS NULL 또는 IS NOT NULL 사용
+
+```sql
+SELECT * FROM emp WHERE mgr IS NULL;
+SELECT * FROM emp WHERE mgr IS NOT NULL;
+```
+
+## NULL 관련 함수
+
+- NVL : NULL 이면 다른 값으로 변경
+  - NVL(mgr, 0) : mgr이 null이면 0으로 변경
+- NVL2 : NVL 함수와 DECODE를 하나로 만든 것
+  - NVL2(mgr, 1, 0) : mgr이 not null 이면 1, null이면 0
+- NULLIF : 두 개의 값이 다르면 null, 다르면 첫 번째 값
+  - NULLIF(exp1, exp2) : exp1 == exp2 면 null, 다르면 exp1
+- COALESCE : NULL이 아닌 최초의 표현식
+  - COALESCE(null, null, 'abc') : abc
+  - 표현식이 모두 NULL일 경우엔 결과도 NULL
+  - 인수에 NULL 값 상수만 지정한다면 오류 발생
+
+# GROUP BY, HAVING 특징
+
+- GROUP BY 절을 통해 소그룹별 기준을 정한 후, SELECT 절에 집계함수를 사용.
+- 집계 함수의 통계 정보는 NULL 값을 가진 행을 제외하고 수행한다.
+- GROUP BY 절에서는 Alias는 사용할 수 없다.
+- 집계 함수는 WHERE 절에 올 수 없다.
+- HAVING 절에는 집계함수를 이용해 조건 표시가 가능하다.
+- HAVING 절에는 일반적으로 GROUP BY 뒤에 위치한다.
+
+# 집계함수의 종류
+
+```sql
+COUNT(*) -- 행 수를 조회(null 포함)
+COUNT(표현식) -- 행 수를 조회 (NULL 제외)
+SUM() : 합계를 계산
+AVG () : 평균을 계산
+STDDEV() : 표준 편차
+VARIAN() : 분산
+MAX(), MIN() : 최댓값, 최솟값
+```
+
+# 명시적 형 변환
+
+- 형 변환 함수를 사용해서 데이터 타입을 일치시키는 것.
+- 인덱스 칼럼에 형 변환을 수행 시 인덱스를 사용할 수 없다.
+- 인덱스는 기본적으로 변형이 발생하면 인덱스를 사용할 수 없다. (예외도 있음)
+
+# 형 변환 함수
+
+- TO_NUMBER (문자열) : 문자열을 숫자로 변환
+- TO_CHAR(숫자 혹은 날짜, [FORMAT]) : 숫자 혹은 문자를 지정된 FORMAT의 문자로 변환
+- TO_DATE(문자열, FORMAT) : 문자열을 지정된 FORMAT의 날짜형으로 변환
+
+# 내장형 함수 (Built-In Function)
+
+- DUAL 테이블
+  - Oracle DB에 의해서 자동으로 생성되는 테이블
+  - DB의 모든 사용자가 사용할 수 있다.
+
+# 문자형 함수
+
+- ASCII(문자) : 문자 또는 숫자의 ASCII 값 반환
+- CHR(ASCII) / CHAR(ASCII) : ASCII 값에 해당하는 문자 반환
+- SUBSTR(문자열, m, n) : 문자열에서 m번째 위치부터 n개를 자른다. (SQL Server는 SUBSTRING)
+- CONCAT(문자열1, 문자열2) : 문자열 1,2를 결합
+- LOWER(문자열) : 영문자를 소문자로
+- UPPER(문자열) : 영문자를 대문자로
+- LENGTH(문자열) / LEN(문자열) : 문자열의 길이(공백 포함)
+- LTRIM(문자열, 지정문자) : 왼쪽에 지정된 문자를 삭제
+- RTRIM(문자열, 지정문자) : 오른쪽에 지정된 문자를 삭제
+- TRIM (문자열, 지정문자) : 양쪽에 지정된 문자를 삭제
+  (LTRIM, RTRIM, TRIM에서 지정문자 생략 시 공백을 삭제)
+
+# 날짜형 함수
+
+- SYSDATE / GETDATE() : 현재 날짜와 시각 출력
+- EXTRACT / DATEPART() : 현재 날짜에서 데이터 출력
+
+```SQL
+EXTRACT('YEAR'|'MONTH'|'DAY' from SYSDATE)
+```
+
+# 숫자형 함수
+
+- ABS(n) : 절대값 반환
+- SIGN(n) : 양수는 1, 음수는 음수는 0반환
+- MOD(n1, n2) : n1을 n2로 나눈 나머지 반환
+- CEIL/CEILING(n) : 올림 (크거나 같은 최소 정수 반환)
+- FLOOR(n) : 버림(작거나 같은 최대 정수 반환)
+- ROUND(n,m) : 소수점 m 자리에서 반올림
+- TRUNC(n,m) : 소수점 m 자리에서 절삭
+
+```SQL
+CEIL(38.433) -- 39
+FLOOR(38.433) -- 38
+ROUND(38.433) -- 38
+TRUNC(38.433) -- 38
+```
+
+# CASE
+
+(1) SIMPLE_CASE_EXPRESSION : CASE 다음에 바로 조건에 사용되는 칼럼이나 표현식을 표시
+
+```SQL
+CASE LOC WHEN 'a' THEN 'b'
+```
+
+(2) SEARCHED_CASE_EXPRESSION : WHEN 절에서 EQUI 조건을 포함한 여러 조건을 사용가능
+
+```sql
+CASE WHEN LOC = 'a' THEN LOC = 'b'
+```
+
+# DECODE : 특정 조건이 참이면 A, 거짓이면 B로 응답
+
+```sql
+-- empno = 1000 이면 true, 아니면 false
+DECODE(empno, 1000, 'true' ,'false')
+```
+
+# ROWNUM
+
+- SELECT 문의 결과에 대해선 논리적인 일련번호를 부여한다.
+- 조회되는 행 수를 제한할 때 많이 사용된다.
+- ROWNUM을 사용해서 한 개의 행을 가지고 올 수 있으나, 여러개의 행을 가지고 올 때는 인라인 뷰를 사용해야 한다.
+
+# ROWID
+
+- Oracle DB 내에서 데이터를 구분할 수 있는 유일한 값
+- 데이터가 어떤 데이터 파일, 어떤 블록에 저장되어 있는지를 알 수 있다.
+
+## ROWID 구조
+
+- 오브젝트 번호(1~6) : 오브젝트 별로 유일한 값을 가지고 있으며, 해당 오브젝트가 속해있는 값.
+- 상대 파일 번호(7~9) : 테이블 스페이스에 속해 있는 데이터파일에 대한 상대 파일 번호
+- 블록 번호(10~15) : 데이터파일 내부에서 어느 블록에 데이터가 있는지 알려준다.
+- 데이터 번호(16~18) : 데이터블록에 데이터가 저장되어 있는 순서를 의미
+
+# WITH
+
+- WITH 구문은 서브쿼리를 사용해서 임시 테이블이나 뷰처럼 사용할 수 있는 구문이다.
+- 서브쿼리 블록에 별칭을 지정할 수 있다.
+- 옵티마이저는 SQL을 인라인 뷰나 임시테이블로 판단한다.
+
+```sql
+--1
+WITH viewDAta AS (SELECT * FROM EMP);
+
+--2
+SELECT * FROM view Data
+```
+
+> WITH TIES
+
+- 가장 급여가 높은 1명을 출력한다.
+- 단, 같은 급여를 받는 사원도 출력한다.
+
+```sql
+SELECT top(1) WITH TIES ename, sal FROM emp ORDER BY sal DESC
+```
+
+# SQL 문 실행 순서
+
+5 - 1 - 2 - 3 - 4 - 6
+SELECT - FROM - WHERE - HAVING - GROUP BY - ORDER BY
+
+# 연산자 우선순위
+
+() -> NOT -> 비교연산자 -> AND -> OR
+
+<hr/>
+
+# DCL (Data Control Language)
+
+- GRANT : DB 사용자에게 권한 부여
+
+```sql
+-- privileges는 권한, object는 테이블, user는 사용자
+GRANT privileges ON object To user;
+
+-- kim 에게 emp 테이블의 조회, 수정 권한 부여
+GRANT select, update ON emp To kim;
+```
+
+- Pribileges (권한)
+
+1. SELECT / INSERT / UPDATE / DELETE : 조회/삽입/수정/삭제
+2. REFERENCES : 지정된 테이블을 참조하는 제약조건을 생성하는 권한을 부여
+3. ALTER : 지정된 테이블의 정의를 수정할 수 있는 권한
+4. INDEX : 지정된 테이블에 인덱스를 생성할 수 있는 권한
+5. ALL : 테이블에 대한 모든 권한
+
+- WITH GRANT OPTION
+
+1. WITH GRANT OPTION : 특정 사용자에게 권한을 부여할 수 있는 권한을 부여
+
+- A가 B에 권한 부여하고, B가 C에 권한 부여한 후 B의 권한을 회수하면 C의 권한까지 회수된다.
+
+2. WITH ADMIN OPTION : 테이블에 대한 모든 권한 부여
+
+- A가 B에 권한 부여하고, B가 C에 권한 부여한 후 B의 권한을 회수하면 B의 권한만 회수된다.
+
+- REVOKE : DB 사용자에게 부여된 권한을 회수한다.
+
+```sql
+REVOKE privileges ON object FROM user;
+```
+
+# TCL (Transaction Control Language)
+
+- 트랜잭션 : 밀접히 관련되어 분리될 수 없는 1개 이상의 DB 조작
+  COMMIT, ROLLBACK, SAVEPOINT
+
+# COMMIT
+
+- INSERT, UPDATE, DELETE 문으로 변경한 데이터를 DB에 반영한다.
+- 변경 전 이전 데이터는 잃어버린다.
+- DB 변경으로 인한 LOCK이 해제된다.
+- COMMIT을 실행하면 하나의 트랜잭션 과정을 종료한다.
+
+> Auto Commit : SQL\*PLUS 프로그램을 정상적으로 종료하는 경우 자동 Commit / DDL 및 DCL을 사용하는 경우 자동 Commit / set autocommit on; 을 실행하면 자동 commit
+
+# ROLLBACK
+
+- 데이터에 대한 변경을 모두 취소하고 트랜잭션을 종료
+- 트랜잭션 시작 이전의 상태로 되돌림
+- ROLLBACK 을 실행하면 LOCK이 해제된다.
+
+# SAVEPOINT
+
+- 트랜잭션을 작게 분할하여 관리
+- 저장 시점, 현 시점에서 SAVEPOINT까지 트랜잭션의 일부만 ROLLBACK 가능
+
+```SQL
+SAVEPOINT <SAVEPOINT명>; --Oracle
+ROLLBACK TO <SAVEPOINT명>; --Oracle
+
+SAVE TRANSACTION <SAVEPOINT명>; --SQL Server
+ROLLBACK TRANSACTION <SAVEPOINT명>; -- SQL Server
+```
+
+# JOIN
+
+- 두 개 이상의 테이블을 결합하여 데이터를 출력하는 것.
+- 일반적으로 행들은 PK나 FK 값의 연관에 의해 JOIN이 성립됨.
+- 어떤 경우에는 PK, FK 관계가 없어도 논리적인 값들의 연관만으로도 JOIN이 성립 가능하다.
+
+> 테이블 개수에 따른 조인 횟수
+
+- 5개의 테이블을 조인하기 위한 최소의 조인 횟수는 4.
+- 최소의 조인 횟수 = 테이블수 - 1
+
+# 조인의 종류
+
+EQUI JOIN (동등 조인), NON EQUI JOIN(비동등 조인), NATURAL JOIN, CROSS JOIN
+
+## EQUI JOIN(동등 조인)
+
+- 2개의 테이블 간 칼럼 값들이 서로 정확하게 일치할 때 사용. 대부분 PK, FK의 관계를 기반으로 함
+
+## NON EQUI JOIN(비동등 조인)
+
+- 동등 조인은 '=' 연산자를 사용한다. '=' 연산자가 아닌 다른 연산자를 사용한 경우는 모두 비동등 조인이다.
+
+## NATURAL JOIN
+
+- WHERE 절에서 조인 조건 추가 불가
+- OWNER명 사용 불가
+- ex. PLAYER.NAME (X) / NAME (O)
+
+## CROSS JOIN
+
+- WHERE 절에서 JOIN 조건 추가 가능 (조인에 대해선 다음 장에서 자세히 설명)
