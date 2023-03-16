@@ -199,3 +199,69 @@ order by sal;
   FROM dual
   ```
   > https://youtu.be/PC3ypt_VGWI?t=1855
+
+# 날짜함수
+
+날짜 데이터의 형변환을 일으키는 함수
+
+- to_char : TO_CHAR(SYSDATE, 'YYYYMMDD'), TO_CHAR(SYSDATE, 'YYYY/MM/DD')과 같이 사용
+- 위와 같이 사용하면 20200723, 2020
+- to_date : TO_DATE('20160901151212','YYYYMMDDHH24MISS'), TO_DATE('2016','YYYY')
+
+  - 위와 같이 사용하면 2016-09-01 오후3:12:12와 같은 날짜로 표기됨.
+
+- sysdate : 오라클에서 현재시간 출력해주는 함수
+- getdate : sql server에서 현재시간 출력해주는 함수
+
+- 날짜데이터 + 100 하면 => 100일 이후로 인식. (날짜연산은 기본적으로 day로 인식한다.)
+
+# DECODE / CASE
+
+## DECODE
+
+```sql
+DECODE(gender, "M", "남자", "F", "여자", "기타")
+```
+
+gender가 M이면 남자, F면 여자, 둘다 아니면 기타
+
+- 마지막 파라미터(else) 부분은 생략 가능. 해당 조건이 없으면 null 처리
+
+## CASE WHEN
+
+```sql
+  CASE
+    WHEN THEN -- 조건1
+    WHEN THEN -- 조건2
+  ELSE
+  END
+```
+
+- ELSE가 있으면, 모든 조건 (조건1,조건2) 만족하지 않으면 else에 있는거 출력
+- ELSE 가 없는 경우, 모든 조건(조건1, 조건2) 만족하지 않으면 null 출력
+
+# 집계 함수 (매우 중요)
+
+## null과의 관계
+
+- sum() : null 값을 제외하고 더하기.
+- count(컬럼) : null 값을 제외한 컬럼 개수를 센다.
+- count(\*) : null 값을 포함한 전체 컬럼 개수를 센다.
+
+```
+  A    B     C    A+B+C
+null  null   1     null
+3      2     2      7
+null   2     3     null
+
+에서, sum(A) = null / sum(B) = 7 / sum(C) = null
+vs
+sum(A+B+C)
+
+의 차이 기억해놓기.
+```
+
+# GROUP BY (집약기능)
+
+- WHERE 다음에 실행.
+- 그룹수준의 정보를 바꾼다.
