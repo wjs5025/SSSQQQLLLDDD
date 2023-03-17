@@ -246,7 +246,7 @@ gender가 M이면 남자, F면 여자, 둘다 아니면 기타
 
 - sum() : null 값을 제외하고 더하기.
 - count(컬럼) : null 값을 제외한 컬럼 개수를 센다.
-- count(\*) : null 값을 포함한 전체 컬럼 개수를 센다.
+- count(\*) : null에 상관없이 전체 컬럼 개수를 센다.
 
 ```
   A    B     C    A+B+C
@@ -265,3 +265,5 @@ sum(A+B+C)
 
 - WHERE 다음에 실행.
 - 그룹수준의 정보를 바꾼다.
+
+> https://youtu.be/PC3ypt_VGWI?t=2211
