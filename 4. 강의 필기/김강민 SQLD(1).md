@@ -267,3 +267,27 @@ sum(A+B+C)
 - 그룹수준의 정보를 바꾼다.
 
 > https://youtu.be/PC3ypt_VGWI?t=2211
+
+# natural join / using
+
+- 중복된 컬럼이 하나로 출력됨.
+- 중복되 컬럼이 제일 앞에 등장함.
+
+## natural join
+
+## using
+
+- alias 사용 불가능
+
+# left outer join
+
+- A left outer join
+  - left 조인이면 오른쪽에 (+) 붙인다.
+    = A col 1 = b col1 (+)
+  -
+
+- A right outer join
+  - right 조인이면 왼쪽에 (+) 붙인다.
+    = A col 1 (+) = b col 1
+
+
