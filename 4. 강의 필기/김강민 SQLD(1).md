@@ -275,6 +275,8 @@ sum(A+B+C)
 
 ## natural join
 
+- ALIAS 사용가능 !
+
 ## using
 
 - alias 사용 불가능
@@ -282,12 +284,198 @@ sum(A+B+C)
 # left outer join
 
 - A left outer join
+
   - left 조인이면 오른쪽에 (+) 붙인다.
+  - 오른쪽이 뚱뚱해진다.
     = A col 1 = b col1 (+)
   -
 
 - A right outer join
+
   - right 조인이면 왼쪽에 (+) 붙인다.
+  - 왼쪽이 뚱뚱해진다.
     = A col 1 (+) = b col 1
 
+## 조인순서
 
+From A, B, C에서,
+AB 먼저 조인 후 그 결과(하나의 테이블)와 C를 다시 조인
+
+# 서브쿼리
+
+[절별 서브쿼리 들어감 여부]
+SELECT - 단일행 서브쿼리 중 하나인 Scalar 들어감
+FROM - Inline View 들어감 (메인쿼리의 컬럼사용가능 !)
+WHERE - 거의 모든 서브쿼리가 다들어감 (중첩서브쿼리)
+GROUPBY - 서브쿼리 안들어감
+HAVING - 거의 모든 서브쿼리가 다들어감 (중첩서브쿼리)
+ORDER BY - Scalar 서브쿼리
+
+## 스칼라 서브쿼리(Scalar Subquery)
+
+- SELECT 절에서 사용하는 쿼리
+- 스칼라 서브쿼리는 항행,, 한 칼럼만 반환하는 서브쿼리를 말함.
+- 컬럼을 사용할 수 있는 대부분의 곳에서 사용가능.
+- 단일행 서브쿼리라서, 2개이상의 결과가 반환되면 오류발생
+
+```sql
+SELECT PLAYER_NAME 선수명, HEIGHT 키,
+       ROUND( (SELECT AVG(HEIGHT)
+                 FROM PLAYER X
+                WHERE X.TEAM_ID = P.TEAM_ID), 3) 팀평균키
+FROM PLAYER P
+```
+
+# 서브쿼리 예시
+
+- 서브쿼리는, 한개의 메인테이블의 ROW를 볼 때,
+  모든 ROW를 대상으로 서브쿼리를 다돈다.
+  그렇게 A.COL1 = B.COL1 인경우를 다 찾아내는 것.
+
+```sql
+SELECT
+FROM A
+WHERE (
+  SELECT
+  FROM B
+  WHERE A.COL1 = B.COL1
+)
+```
+
+# IN, ANY/SOME, ALL, EXISTS
+
+## IN
+
+- 조건절에서 사용하고, 다수의 비교값과 비교하여 비교값 중 하나라도 같은 값이 있다면 TRUE
+
+## ANY
+
+- 다수의 비교값 중 한개라도 만족하면 TRUE
+- IN과의 차이는 비교연산자를 사용한다는 점.
+
+```SQL
+SELECT * FROM WHERE SAL = ANY(950,3000,1250)
+```
+
+## SOME (ANY와 동일)
+
+## ALL
+
+- 전체 값을 비교하여 모두 만족하면 TRUE
+
+```SQL
+SELECT * FROM emp WHERE sal>ALL(950, 3000, 1250)
+```
+
+## EXISTS / NOT EXISTS
+
+- 대부분 IN을 이용하는 것보다 EXISTS를 사용하는 것이 쿼리 성능면에서 장점을 가진다.
+
+- EXISTS : 서브 쿼리가 적어도 하나의 행을 돌려주면 TRUE가 된다. ('1', 'X', 'A' 등 다 서브쿼리에서 가져올 수 있는데, 그냥 있기만하면 TRUE)
+- NOT EXISTS : 서브 쿼리가 적어도 하나의 행을 돌려주지 않으면 TRUE가 된다.
+
+# 집합 연산자
+
+## UNION
+
+- 정렬작업 있음, 조금 느리다
+
+## INTERSECT
+
+- 정렬작업 있음, 조금 느리다
+
+## MINUS (EXCEPT)
+
+- 정렬작업 있음, 조금 느리다
+
+## UNION ALL
+
+- 중복 데이터 존재, 정렬작업 없음, 빠르다
+
+## UNION VS UNION ALL
+
+UNION ALL 이 빠르다.
+
+# DDL
+
+DROP ALTER CREATE TRUNCATE
+
+## TRUNCATE vs DROP
+
+DROP는 건물 철거 (구조 자체를 없애서 모두 없애버림)
+TRUNCATE는 입주민 퇴거 (구조는 남아있고 레코드만 삭제)
+
+## TRUNCATE vs DELETE
+
+- DDL vs DML
+- TRUNCATE는 롤백 불가능
+- DELETE는 롤백 가능
+
+# DML
+
+- INSERT UPDATE DELETE SELECT MERGE
+- INSERT UPDATE DELETE는 대부분 TCL(COMMIT ROLLBACK과 연관지어서 나옴)
+- MERGE(신유형)
+
+# 제약조건 \*\*\*
+
+PK : UNIQUE + NOT NULL / 대표성을 띄기 때문에 하나만 존재함
+UNIQUE
+NOT NULL
+
+# DCL
+
+- GRANT REVOKE
+- ROLE 특징
+  - 명령어는 아니고 오브젝트인데,
+
+```SQL
+-- WITH GRANT OPTION
+GRANT SELECT ON A.T_TABLE TO B WITH GRANT OPTION;
+```
+
+```SQL
+REVOKE SELECT ON my_table
+FROM jsm CASCADE;
+-- CASCADE : jsm이 권한을 준 모든 대상을 가리킴
+-- 즉, jsm의 권한과 연결된 대상의 권한을 전부 취소
+```
+
+# VIEW
+
+- 독편보
+- 독립성 : 기존 테이블 구조가 변경되어도 뷰를 사용하는 응용 프로그램은 변경하지 않아도 된다.
+- 편리성 : 복잡한 질의를 뷰로 만들면, 관련 질의를 단순하게 작성할 수 있다.
+- 보안성 : 숨기고 싶은 데이터가 존재한다면, 뷰 생성 시 해 당 컬럼을 빼고 만들어서 보안성 확보
+
+```SQL
+CREATE VIEW AS SELECT문
+```
+
+# 그룹함수
+
+- ROLL UP : ROLLUP (A,B) != ROLLUP(B,A)
+- CUBE : CUBE(A,B) = CUBE(B,A)
+- GROUPINGSETS :
+- GROUPING
+
+## 문제 예시
+
+표를 주고 ROLLUP CUBE GROUPINGSETS 인지 판단하는 문제
+
+1. NULL 다 찾기
+2. 총합행이 있는지 찾기
+   - X : GROUPINGSETS
+   - O : ROLLUP, CUBE (양쪽으로 결과가 나오면 CUBE(행의 수가 많아보여요), 한쪽으로만 결과가 나오면 ROLLUP ()(행의수가 적어보여요))
+
+# TCL
+
+- COMMIT ROLLBACK
+
+- 오라클은 AUTO COMMIT OFF가 기본값. (SQL SERVER는 ON)
+- DDL 커밋기능 없애는 명령어 (SQL SERVER)
+
+```SQL
+AUTO CUMMIT OFF
+AND BEGIN TRANSACTION
+```
